@@ -10,6 +10,27 @@ from timm.models.vision_transformer import PatchEmbed
 
 
 class Timesteps(nn.Module):
+    """
+    This class embedds the time vector using sine and cosine embeddings.
+    It is a way of reinforcing the model of what time step we are in the
+    diffusion process. The reason why we cannot just use regular indexed
+    sets for the process is because this is descrete values. The embeddings put
+    this on a continuous space. Also since this is cyclic if our model is at a
+    time step that we have not seen then we can easily interpolate between the
+    time step.
+
+    # the flip to sine and cosine can help our model learn different
+      paramerizations to time
+    # the downscale frequency shift allows us to control how the frequency of time
+      changes accorss the embeddings dimensions. Helps our diffusion models
+      understand the differences between time better.
+
+    Input: The time steps probably like linespace
+    Output: The time embeddings which we can specify with the output channels of the
+            embeddings.
+
+    """
+
     def __init__(
         self,
         num_channels: int,
@@ -22,6 +43,7 @@ class Timesteps(nn.Module):
         self.downscale_freq_shift = downscale_freq_shift
 
     def forward(self, timesteps):
+        # notice how the input are the actual time steps that we would create
         t_emb = get_timestep_embedding(
             timesteps,
             self.num_channels,
@@ -32,19 +54,32 @@ class Timesteps(nn.Module):
 
 
 class StochasticUnknownTimesteps(Timesteps):
+    """
+    Notice we are inheriting the properties of the Timestep embedding class. On a high
+    level this apparantely extends the class by adding an unknown token. Maybe for
+    masking.
+    """
+
     def __init__(
+        # the constructor takes in the size we want to embed the tokens
+        # the p is the probability that we use the unknown token
         self,
         num_channels: int,
         p: float = 1.0,
     ):
         super().__init__(num_channels)
+        # if there is a prob defined create the weights of the uknown token
+        # this is done with a random normal distribution
+        # will not be needed if p==0
         self.unknown_token = (
             nn.Parameter(torch.randn(1, num_channels)) if p > 0.0 else None
         )
         self.p = p
 
     def forward(self, timesteps: torch.Tensor, mask: Optional[torch.Tensor] = None):
+        # we first use normal embeddings for all of the time steps
         t_emb = super().forward(timesteps)
+        # mask is what we want to hide during infernce
         # if p == 0.0 - return original embeddings both during training and inference
         if self.p == 0.0:
             return t_emb
@@ -52,6 +87,8 @@ class StochasticUnknownTimesteps(Timesteps):
         # training or mask is None - randomly replace embeddings with unknown token with probability p
         # (mask can only be None for logging training visualization when using latents)
         # or if p == 1.0 - always replace embeddings with unknown token even during inference)
+        # these are the three lines that actually mask out the tokens if we want to in
+        # diffusion
         if self.training or self.p == 1.0 or mask is None:
             mask = torch.rand(t_emb.shape[:-1], device=t_emb.device) < self.p
             mask = mask[..., None].expand_as(t_emb)
@@ -61,14 +98,21 @@ class StochasticUnknownTimesteps(Timesteps):
         # if mask is None:
         #     assert False, "mask should be provided when 0.0 < p < 1.0"
         mask = mask[..., None].expand_as(t_emb)
+        # this is when we are in inference
         return torch.where(mask, self.unknown_token, t_emb)
 
 
 class StochasticTimeEmbedding(nn.Module):
+    """
+    This class basically uses fourier embeddings or the class above with the regular
+    embeddings if the user_fourier is set to true.
+    """
+
     def __init__(
         self,
         dim: int,
         time_embed_dim: int,
+        # whether to use fourier
         use_fourier: bool = False,
         p: float = 0.0,
     ):
@@ -77,14 +121,19 @@ class StochasticTimeEmbedding(nn.Module):
         if self.use_fourier:
             assert p == 0.0, "Fourier embeddings do not support stochastic timesteps"
         self.timesteps = (
+            # we are calling the fourier embeddings class if the suer_fourier is true
+            # otherwise use the stochastic unknown timesteps
             FourierEmbedding(dim, bandwidth=1)
             if use_fourier
             else StochasticUnknownTimesteps(dim, p)
         )
+        # then they xall the timestep embeddings above
+        # this grabs the sinusoidal embeddgins below
         self.embedding = TimestepEmbedding(dim, time_embed_dim)
 
     def forward(self, timesteps: torch.Tensor, mask: Optional[torch.Tensor] = None):
         return self.embedding(
+            #
             self.timesteps(timesteps)
             if self.use_fourier
             else self.timesteps(timesteps, mask)
@@ -93,6 +142,7 @@ class StochasticTimeEmbedding(nn.Module):
 
 class FourierEmbedding(torch.nn.Module):
     """
+    This is the fourier embeddings as well
     Adapted from EDM2 - https://github.com/NVlabs/edm2/blob/38d5a70fe338edc8b3aac4da8a0cefbc4a057fb8/training/networks_edm2.py#L73
     """
 
@@ -155,7 +205,8 @@ def get_timestep_embedding(
 
 class RotaryEmbeddingND(nn.Module):
     """
-    Minimal Axial RoPE generalized to N dimensions.
+    Minimal Axial RoPE generalized to N dimensions. These are the emebddgins that are
+    heavily used in transformers a lot. They sommehow rotate the time embeddings.
     """
 
     def __init__(
@@ -304,6 +355,7 @@ class RandomEmbeddingDropout(nn.Module):
 
 class RandomDropoutCondEmbedding(TimestepEmbedding):
     """
+    MAYBE WE CAN USE THIS AND ADD OUR CLIP EMBEDDINGS HERE AS WELL
     A layer for processing conditions into embeddings, randomly dropping embeddings of each frame during training.
     NOTE: If dropout_prob is 0, it will fall back to `TimestepEmbedding`. We use this trick to ensure the backward compatibility with our previous checkpoints.
     """
@@ -329,6 +381,12 @@ class RandomDropoutCondEmbedding(TimestepEmbedding):
 
 
 class RandomDropoutPatchEmbed(nn.Module):
+    """
+    This is a module that is actually uses for tokenizing a frame.
+    Also seems to apply the masking or dropout of the patches maybe. Will defintely
+    come back to this after.
+    """
+
     def __init__(
         self,
         dropout_prob: float = 0.1,

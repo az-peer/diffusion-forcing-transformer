@@ -48,6 +48,10 @@ diffusion:
     shift: 1.0
   use_causal_mask: False
   clip_noise: 20.0
+  # CLIP guidance settings
+  use_clip_guidance: True
+  clip_text: "You will try to make a path or a trajectory such that the last frame ends up at a bathroom."
+  clip_guidance_scale: 2.0
   # training
   objective: pred_v
   loss_weighting:

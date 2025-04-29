@@ -9,6 +9,8 @@ from torchvision.transforms import (
 import clip
 from algorithms.common.metrics.video.utils import videos_as_images
 
+# CLIP feature extractor
+
 
 class CLIP(nn.Module):
     def __init__(self, name: str):

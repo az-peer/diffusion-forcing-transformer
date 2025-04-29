@@ -3,6 +3,10 @@ from torch import nn
 from utils.torch_utils import freeze_model
 from utils.huggingface_utils import download_from_hf
 
+"""
+    This is another model used to evaluate videos 
+"""
+
 
 def load_pretrained_i3d() -> torch.jit.ScriptModule:
     model_path = download_from_hf("metrics_models/i3d_torchscript.pt")

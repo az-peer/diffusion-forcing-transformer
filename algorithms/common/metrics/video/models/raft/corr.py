@@ -2,7 +2,13 @@ import torch
 import torch.nn.functional as F
 from .utils import bilinear_sampler
 
+####################################### GOAL ##########################################
+"""
+    This file basically creates the spatial correlation volume. Pretty cool shit. 
+"""
 
+
+#######################################################################################
 class CorrBlock:
     def __init__(self, fmap1, fmap2, num_levels=4, radius=4):
         self.num_levels = num_levels

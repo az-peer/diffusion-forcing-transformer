@@ -13,6 +13,8 @@ import einops
 from utils.print_utils import cyan
 from utils.distributed_utils import rank_zero_print
 
+# this file just teaches you how to use pytorch lightning.
+
 
 class BasePytorchAlgo(pl.LightningModule, ABC):
     """

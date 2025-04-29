@@ -1,8 +1,25 @@
 import torch
 import torch.nn as nn
 
+################################### GOAL #####################################
+"""
+    This file basically makes a shit ton of encoder.
+    Each one is of a different scale. Like a big, medium, and small one. 
+"""
+##############################################################################
+
 
 class BottleneckBlock(nn.Module):
+    """
+    This is called a botteneck block which is essentially a NN that is meant
+    to operate on a latent space. This can take in variety of options
+    including what norm to take and other things. One thing that this does though is
+    use 1x1 kernels. This takes a linear omcbintaion of all values accross each
+    channel. 1x1 is super efficient when compared to a fully connected layer. It
+    can be seen as shrinking the values of the channel sizes or complexity when we want
+    to do something expensive.
+    """
+
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
         super(BottleneckBlock, self).__init__()
 
@@ -59,10 +76,11 @@ class BottleneckBlock(nn.Module):
 
         if self.downsample is not None:
             x = self.downsample(x)
-
+        # does a skip connection again
         return self.relu(x + y)
 
 
+# this does almost the same things as above but there is just no 1x1
 class ResidualBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
         super(ResidualBlock, self).__init__()
@@ -118,6 +136,8 @@ class ResidualBlock(nn.Module):
         return self.relu(x + y)
 
 
+# this is a type of autoencoder which utilizes the bottleneck class that is created
+# above
 class SmallEncoder(nn.Module):
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
         super(SmallEncoder, self).__init__()
@@ -192,6 +212,7 @@ class SmallEncoder(nn.Module):
         return x
 
 
+# this does the same thing but instead of the bottleneck layer it uses the residual
 class BasicEncoder(nn.Module):
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
         super(BasicEncoder, self).__init__()
@@ -268,6 +289,7 @@ class BasicEncoder(nn.Module):
         return x
 
 
+# another type of encoder (seems larger :) )
 class LargeEncoder(nn.Module):
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
         super(LargeEncoder, self).__init__()

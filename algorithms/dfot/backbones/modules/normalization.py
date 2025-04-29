@@ -6,6 +6,10 @@ class RMSNorm(nn.Module):
     """
     Root Mean Square Layer Normalization (RMSNorm) from https://arxiv.org/abs/1910.07467.
     Reference: https://github.com/meta-llama/llama/blob/main/llama/model.py#L34-L77
+
+    This is a type of normalization that helps with stability and usually with
+    tranformers they actually apply this normalization accross each token.We will see
+    though.
     """
 
     def __init__(self, dim: int, eps: float = 1e-6):

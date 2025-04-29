@@ -7,6 +7,16 @@ from .ifrnet import (
     ResBlock,
 )
 
+########################### GOAL #############################################
+"""
+    Get of way of getting intermediate frames using optical flow 
+    This file havily uses ifrnet which is a deep learning method of estimating
+    the flows .
+
+"""
+
+#############################################################################
+
 
 def multi_flow_combine(
     comb_block, img0, img1, flow0, flow1, mask=None, img_res=None, mean=None
@@ -22,12 +32,20 @@ def multi_flow_combine(
         If 'img_res' is None, the function adds zero instead.
     mean (opt):
         If 'mean' is None, the function adds zero instead.
+
+        Basically this is a sick ass function. Call is MULTI-FLOW BABY. Imagine that
+        you have two consecutive frames. But sometimes maybe we want to produce a
+        frame that is in the middle of these two. How do we do that? This sick ass
+        function. We basically take two iamges and two flow maps, then we apply multiple
+        approximations for what we believe the flow to be and average them out to get
+        a more robutst interpertation.
     """
     b, c, h, w = flow0.shape
     num_flows = c // 2
     flow0 = flow0.reshape(b, num_flows, 2, h, w).reshape(-1, 2, h, w)
     flow1 = flow1.reshape(b, num_flows, 2, h, w).reshape(-1, 2, h, w)
-
+    # this is to determien how much of the flow from flow map one to use
+    # versu sthe other one
     mask = (
         mask.reshape(b, num_flows, 1, h, w).reshape(-1, 1, h, w)
         if mask is not None
@@ -48,17 +66,23 @@ def multi_flow_combine(
 
     img0_warp = warp(img0, flow0)
     img1_warp = warp(img1, flow1)
+    # this is where we take the weighted average
     img_warps = mask * img0_warp + (1 - mask) * img1_warp + mean + img_res
     img_warps = img_warps.reshape(b, num_flows, 3, h, w)
     imgt_pred = img_warps.mean(1) + comb_block(img_warps.view(b, -1, h, w))
     return imgt_pred
 
 
+# this is the final decoder for the flow
 class MultiFlowDecoder(nn.Module):
     def __init__(self, in_ch, skip_ch, num_flows=3):
         super(MultiFlowDecoder, self).__init__()
+        # class seems like an encoder that we pass into the function above
+        # define the number of estimates for flow that we have
         self.num_flows = num_flows
+        # defines a conv block
         self.convblock = nn.Sequential(
+            # ti
             convrelu(in_ch * 3 + 4, in_ch * 3),
             ResBlock(in_ch * 3, skip_ch),
             nn.ConvTranspose2d(in_ch * 3, 8 * num_flows, 4, 2, 1, bias=True),

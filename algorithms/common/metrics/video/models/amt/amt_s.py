@@ -17,7 +17,26 @@ from .multi_flow import (
     MultiFlowDecoder,
 )
 
+############################### GOAL ##################################################
+"""
+    This is the file that calls of the helper files that we saw throughout the folder.
+    Basically this is a folder which is dedicated to doing the following. It uses 
+    multiscale pyramids, opticaly flow, and correlation volumns, to iterativlely refine
+    and estimate for the interpolation of two video frames. 
 
+    Basically goes as following. We first need to extract the spatial volumnes 
+    which tells us that for each pixel what other pixels are the most similar. Then we 
+    pass this through a series of encoder in the fast_enc.py. This different 
+    encoder grab important features that are robust to resolution by using concepts 
+    very similar to SIFT or spatial pyramids. Then we pass this through the decodeing 
+    layers where the optical flows are computed. We get multiple flows for robuustness.
+    The decoder are defined in the ifrnet.py. We then combine this flows and the two
+    frames to get out final output. 
+
+"""
+
+
+#######################################################################################
 class AMT_S(nn.Module):
     def __init__(
         self,

@@ -2,8 +2,15 @@ from typing import Literal
 import math
 import torch
 
+################################# GOAL ################################################
+"""
+    This file just sets up the noise schedule for the forward diffuion proces.
+"""
+######################################################################################
+
 
 def make_beta_schedule(
+    # this decides what noise schedule to actually use
     schedule: Literal["cosine", "sigmoid", "sd", "linear", "alphas_cumprod_linear"],
     shift: float = 1.0,
     clip_min: float = 1e-9,

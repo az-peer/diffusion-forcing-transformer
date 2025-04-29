@@ -2,7 +2,19 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+##################################### GOAL ##########################################
+"""
+    This file seems like a utility for the concept up iteratively updating the 
+    hypothesis of the optical flow between two video frames. Essentially this could be 
+    used for RAFT. It defines many networks that embedd both the correlation 
+    volumnes between two frames as well as the flow componeents and then passes them 
+    through a GRU to iteratively refine them. 
+"""
+####################################################################################
 
+
+# Defines a simple CNN could
+# I am assuming because it returns a feature map this is used as a feature extractor
 class FlowHead(nn.Module):
     def __init__(self, input_dim=128, hidden_dim=256):
         super(FlowHead, self).__init__()
@@ -14,6 +26,15 @@ class FlowHead(nn.Module):
         return self.conv2(self.relu(self.conv1(x)))
 
 
+"""
+    this is a convolutional gated recurrent neural network
+    basically very similar to a RNN that takes in a hidden states passes this through 
+    time. Then they get the latent state by the a CNN feature extractures. Then the 
+    idea is that we try to have gates that define how much memory we pass through the 
+    network. 
+"""
+
+
 class ConvGRU(nn.Module):
     def __init__(self, hidden_dim=128, input_dim=192 + 128):
         super(ConvGRU, self).__init__()
@@ -23,13 +44,24 @@ class ConvGRU(nn.Module):
 
     def forward(self, h, x):
         hx = torch.cat([h, x], dim=1)
-
+        # zt is typically the latent variable
         z = torch.sigmoid(self.convz(hx))
+        #
         r = torch.sigmoid(self.convr(hx))
         q = torch.tanh(self.convq(torch.cat([r * h, x], dim=1)))
 
         h = (1 - z) * h + z * q
         return h
+
+
+"""
+    This is the same thing as above but it a a SUPER GRU. LMAO. But they do use a 
+    cool layer. You see how there seem to be double the convolutional layers? Well 
+    actually they are applying seperable kernels. One in the horizontal dimension and 
+    one in verticle. This allows this to be efficient while be able to have a larger 
+    CNN.
+
+"""
 
 
 class SepConvGRU(nn.Module):
@@ -73,6 +105,13 @@ class SepConvGRU(nn.Module):
         return h
 
 
+"""
+    This is basically an neural network architecture that takes in the flow between
+    two frames as well as the spatial correlation volume and embedds them into a 
+    higher feature map. 
+"""
+
+
 class SmallMotionEncoder(nn.Module):
     def __init__(self, args):
         super(SmallMotionEncoder, self).__init__()
@@ -89,6 +128,11 @@ class SmallMotionEncoder(nn.Module):
         cor_flo = torch.cat([cor, flo], dim=1)
         out = F.relu(self.conv(cor_flo))
         return torch.cat([out, flow], dim=1)
+
+
+"""
+    Seems to do the exact same thing as above but now with a slightly bigger network.
+"""
 
 
 class BasicMotionEncoder(nn.Module):
@@ -112,6 +156,14 @@ class BasicMotionEncoder(nn.Module):
         return torch.cat([out, flow], dim=1)
 
 
+"""
+    Now we start to actually call all the classes that are above. We first take the 
+    flow map and the correlation volumne and we extract features out of them. We then
+    concatenate them with the input. We then pass them through the GRU. 
+    Net here is the latent variable that we pass through the network. 
+"""
+
+
 class SmallUpdateBlock(nn.Module):
     def __init__(self, args, hidden_dim=96):
         super(SmallUpdateBlock, self).__init__()
@@ -126,6 +178,12 @@ class SmallUpdateBlock(nn.Module):
         delta_flow = self.flow_head(net)
 
         return net, None, delta_flow
+
+
+"""
+    Same thing as above but now uses all the bigger stuff. We also seems to scale down 
+    latent variable of the GRU for some reaon.
+"""
 
 
 class BasicUpdateBlock(nn.Module):

@@ -9,6 +9,7 @@ def videos_as_images(
     """
     Wrapper that enables a function that operates on a batch of images to operate on a batch of videos.
     Can also be used as a decorator.
+
     """
 
     def wrapper(*args: Any, **kwargs: Any) -> Tensor:

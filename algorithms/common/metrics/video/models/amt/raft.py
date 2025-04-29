@@ -2,15 +2,32 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+######################################### RAFT #######################################
+"""
+    What is RAFT: Raft is a deep learning way to get optical flow between two consecutive
+    frames of a video. This is a deep learning approach that starts by passing in 
+    the two images into CNNS and the creating a 4D volumne which captures the correlation
+    between pixels in the first image to pixels in the second image. Then it does 
+    some optimization to adjust this volumn and to get the optical flow
+"""
+
 
 def resize(x, scale_factor):
+    """
+    This function takes in a tensor probably an image and just resizes is by a
+    scaling factor with billinear interpolation which is just a fancy word for
+    taking the weighted average the 4 nearest pixel.
+    """
     return F.interpolate(
         x, scale_factor=scale_factor, mode="bilinear", align_corners=False
     )
 
 
 def bilinear_sampler(img, coords, mask=False):
-    """Wrapper for grid_sample, uses pixel coordinates"""
+    """Wrapper for grid_sample, uses pixel coordinates.
+    Basically used to sample an image given coordinates in the H,W pair
+    We must use billinear interpolation to actually get inbetween pixel moments.
+    """
     H, W = img.shape[-2:]
     xgrid, ygrid = coords.split([1, 1], dim=-1)
     xgrid = 2 * xgrid / (W - 1) - 1
@@ -27,6 +44,10 @@ def bilinear_sampler(img, coords, mask=False):
 
 
 def coords_grid(batch, ht, wd, device):
+    """
+    Generates a grid of coordinates for a batch of images. Just identify where
+    in the image something is.
+    """
     coords = torch.meshgrid(
         torch.arange(ht, device=device), torch.arange(wd, device=device), indexing="ij"
     )
@@ -35,6 +56,11 @@ def coords_grid(batch, ht, wd, device):
 
 
 class SmallUpdateBlock(nn.Module):
+    """
+    This is the class for updating the flow between two frames.
+
+    """
+
     def __init__(
         self,
         cdim,
@@ -100,6 +126,10 @@ class SmallUpdateBlock(nn.Module):
 
 
 class BasicUpdateBlock(nn.Module):
+    """
+    This class is just the fancier version of the previous one
+    """
+
     def __init__(
         self,
         cdim,
@@ -168,6 +198,12 @@ class BasicUpdateBlock(nn.Module):
 
 
 class BidirCorrBlock:
+    """
+    This class is used to get the correlation between 2 features masp.
+    We want to get them in both direction and in both ways. We then do this in
+    a pyramid to make sure
+    """
+
     def __init__(self, fmap1, fmap2, num_levels=4, radius=4):
         self.num_levels = num_levels
         self.radius = radius

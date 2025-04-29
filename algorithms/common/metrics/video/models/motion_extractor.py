@@ -1,5 +1,8 @@
 """
 Adapted from https://github.com/ljh0v0/FVMD-frechet-video-motion-distance
+
+This is basically there custom version of evaluating a generated video. Very similar to
+the pips but customizes it for there data set.
 """
 
 from typing import Tuple, List

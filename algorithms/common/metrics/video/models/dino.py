@@ -4,6 +4,8 @@ from torch import nn, Tensor
 from torchvision.transforms import Compose, Resize, Normalize, Lambda
 from algorithms.common.metrics.video.utils import videos_as_images
 
+# exactly what it seems
+
 
 class DINO(nn.Module):
     def __init__(self):

@@ -3,6 +3,11 @@ from torch import nn, Tensor
 
 LAION_PATH = "https://github.com/LAION-AI/aesthetic-predictor/blob/main/sa_0_4_vit_l_14_linear.pth?raw=true"
 
+"""
+    Another repo that evaluates pictures. This one also has a cool one that uses CLIP.
+    Will definately have to check this out. 
+"""
+
 
 class LAION(nn.Module):
     def __init__(self):

@@ -6,6 +6,12 @@ from .utils import download_model_from_url
 
 MUSIQ_PATH = "https://github.com/chaofengc/IQA-PyTorch/releases/download/v0.1-weights/musiq_spaq_ckpt-358bb6af.pth"
 
+"""
+    Downloads this fucking model. Actually thid is sick. Basically a github for 
+    IQA image quality assesment. Maybe we can use this to evaluate our last frame.
+    DEfinately worth going over later.
+"""
+
 
 class MUSIQ(nn.Module):
     def __init__(self):

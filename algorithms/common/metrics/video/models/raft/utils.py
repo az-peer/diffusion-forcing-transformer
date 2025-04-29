@@ -5,6 +5,16 @@ import numpy as np
 from scipy import interpolate
 from algorithms.common.metrics.video.utils import videos_as_images
 
+############################## GOAL ###################################3
+"""
+    This file is a utility for padding or upsampling frames in a video.
+    It uses the same concepts from the amt propoerty. We try to use 
+    smart interperlations to make the paddings make sense as well as 
+    include a sampler for more accurate continutous propoerties of 
+    a pixel coordinate syste. 
+"""
+########################################################################
+
 
 class InputPadder:
     """Pads images such that dimensions are divisible by 8"""

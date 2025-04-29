@@ -1,5 +1,11 @@
 """
 Adapted from https://github.com/DSL-Lab/FVMD-frechet-video-motion-distance
+
+Basically this is a way to look at a video and kind of evaluate how smooth the video
+transitions sepcifically in aspect to the motion and acceleration of specifc key points
+throughout a video. It compares the generated video to the ground truth video.
+
+MAYBE we look into this as a metric as well? I doubt but to sound fancy.
 """
 
 import torch

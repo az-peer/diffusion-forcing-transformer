@@ -1,7 +1,14 @@
 import torch
 import torch.nn as nn
 
+########################### GOAL ##############################################
+""" 
+    Very similar to the other files just defines a residual network and some feature 
+    extractors. 
+"""
 
+
+###############################################################################
 class ResidualBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
         super(ResidualBlock, self).__init__()

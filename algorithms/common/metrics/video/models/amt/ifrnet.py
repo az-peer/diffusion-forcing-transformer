@@ -4,12 +4,14 @@ import torch.nn.functional as F
 from .utils import warp
 
 
+# this is to blow up a tensor by a lot
 def resize(x, scale_factor):
     return F.interpolate(
         x, scale_factor=scale_factor, mode="bilinear", align_corners=False
     )
 
 
+# create a CNN with pre ReLu, tries to address the dying gradient problem
 def convrelu(
     in_channels,
     out_channels,
@@ -35,6 +37,7 @@ def convrelu(
     )
 
 
+# defines a residual network architecture
 class ResBlock(nn.Module):
     def __init__(self, in_channels, side_channels, bias=True):
         super(ResBlock, self).__init__()
@@ -95,6 +98,11 @@ class ResBlock(nn.Module):
         return out
 
 
+# this is the deep learning version of the gaussian or lapllacian pyramid
+# at certrain resoltuions we grab a feature map and then down sample
+# this is to attempt to get the optical flows for what they call the ifrnetwork
+# the encoder and the decoder is what extracts the actual flows which is what will be
+# used in the multflow file
 class Encoder(nn.Module):
     def __init__(self, channels, large=False):
         super(Encoder, self).__init__()
@@ -120,6 +128,7 @@ class Encoder(nn.Module):
         return fs
 
 
+# takes in the featuer maps and gets the initial estimate for the optical flow
 class InitDecoder(nn.Module):
     def __init__(self, in_ch, out_ch, skip_ch) -> None:
         super().__init__()
@@ -138,6 +147,8 @@ class InitDecoder(nn.Module):
         return flow0, flow1, ft_
 
 
+# another decoding layer to extract the optical flow
+# this is the iterative refinement from the coarse to frame
 class IntermediateDecoder(nn.Module):
     def __init__(self, in_ch, out_ch, skip_ch) -> None:
         super().__init__()

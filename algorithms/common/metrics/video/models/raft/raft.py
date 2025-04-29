@@ -7,6 +7,23 @@ from .extractor import BasicEncoder, SmallEncoder
 from .corr import CorrBlock
 from .utils import coords_grid, upflow8
 
+############################# GOAL ##############################################
+"""
+    First of all I would like to apolgize to you guys for wasting so much time 
+    documenting. This shit is just so cool.
+"""
+
+"""
+    This is the big mother of the raft algorithim. It is actually calling everything.
+    There are two modes we run the baby version and then the big daddy. We first 
+    start by initializing the optical flow. It then iteratively updates the flow 
+    doing some magical update shit. No I am kidding it passes it through the GRUs and 
+    stuff we defined in the other layers. Remeber this can be used to generate frames 
+    that are in the midlle of to images.
+
+"""
+#################################################################################
+
 
 class RAFT(nn.Module):
     def __init__(self, args):
