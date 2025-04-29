@@ -533,20 +533,36 @@ class DiscreteDiffusion(nn.Module):
         clip_text: Optional[str] = None,
     ):
         # Get CLIP embeddings if text is provided
-        print("The CLIP TEXT IS ", clip_text)
+        print("Config values:")
+        print("use_clip_guide", self.cfg.use_clip_guidance)
+        print("clip_text", self.cfg.clip_text)
+          
+          # "clip_text": self.cfg.clip_text,
+          # "clip_guidance_scale": self.cfg.clip_guidance_scale})
         
-        if clip_text is not None:
+        # we are going to try to hard code this
+        if self.cfg.clip_text is not None:
             print("Entering CLIP")
-            clip_embeddings = get_clip_embeddings(clip_text)
+            clip_embeddings = get_clip_embeddings(self.cfg.clip_text)
             # If external_cond is None, use CLIP embeddings
             if external_cond is None:
+                print("Entered the second branch")
                 external_cond = clip_embeddings
             # If external_cond exists, concatenate with CLIP embeddings
             else:
-                external_cond = torch.cat([external_cond, clip_embeddings], dim=-1)
+                print("Entered the third branch")
+                print("The shape of the externeral", external_cond.shape)
+                print("The shape of the CLIP embeddings", clip_embeddings.shape)
+                # let's project the CLIP embeddings to the same size 
+                B, F, C, H, W = external_cond.shape
+                clip_tiled = clip_embeddings.view(1, 1, 512, 1, 1).expand(B, F, 512, H, W)
+                
+                print("Expanded Embeddings: ", clip_tiled.shape)
+                # concatenate on the second dim
+                external_cond = torch.cat([external_cond, clip_tiled], dim=2)
 
             # Use CLIP guidance if enabled
-            if self.cfg.diffusion.use_clip_guidance:
+            if self.cfg.use_clip_guidance:
                 guidance_fn = lambda xk, pred_x0, alpha_cumprod, external_cond: self.clip_guidance_fn(
                     xk,
                     pred_x0,
