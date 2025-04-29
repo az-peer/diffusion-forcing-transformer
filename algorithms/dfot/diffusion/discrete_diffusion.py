@@ -533,7 +533,10 @@ class DiscreteDiffusion(nn.Module):
         clip_text: Optional[str] = None,
     ):
         # Get CLIP embeddings if text is provided
+        print("The CLIP TEXT IS ", clip_text)
+        
         if clip_text is not None:
+            print("Entering CLIP")
             clip_embeddings = get_clip_embeddings(clip_text)
             # If external_cond is None, use CLIP embeddings
             if external_cond is None:
@@ -656,12 +659,12 @@ class DiscreteDiffusion(nn.Module):
         )
 
         # Log current sampling step and CLIP text if available
-        if hasattr(self, 'cfg') and self.cfg.diffusion.use_clip_guidance:
-            print(f"\nDDIM Sampling Step:")
-            print(f"Current noise level: {clipped_curr_noise_level.mean().item():.2f}")
-            print(f"Next noise level: {next_noise_level.mean().item():.2f}")
-            print(f"CLIP guidance text: {self.cfg.diffusion.clip_text}")
-            print(f"CLIP guidance scale: {self.cfg.diffusion.clip_guidance_scale}")
+        # if hasattr(self, 'cfg') and self.cfg.diffusion.use_clip_guidance:
+        print(f"\nDDIM Sampling Step:")
+       #  print(f"Current noise level: {clipped_curr_noise_level.mean().item():.2f}")
+       #  print(f"Next noise level: {next_noise_level.mean().item():.2f}")
+        # print(f"CLIP guidance text: {self.cfg.diffusion.clip_text}")
+        # print(f"CLIP guidance scale: {self.cfg.diffusion.clip_guidance_scale}")
 
         # If using guidance (like CLIP guidance)
         if guidance_fn is not None:
@@ -677,8 +680,8 @@ class DiscreteDiffusion(nn.Module):
                 )
 
                 # Log guidance loss
-                if hasattr(self, 'cfg') and self.cfg.diffusion.use_clip_guidance:
-                    print(f"CLIP guidance loss: {guidance_loss.mean().item():.4f}")
+                # if hasattr(self, 'cfg') and self.cfg.diffusion.use_clip_guidance:
+                # print(f"CLIP guidance loss: {guidance_loss.mean().item():.4f}")
 
                 # Calculate gradient for guidance
                 grad = -torch.autograd.grad(guidance_loss, x)[0]

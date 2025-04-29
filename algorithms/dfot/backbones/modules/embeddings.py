@@ -133,10 +133,8 @@ class StochasticTimeEmbedding(nn.Module):
 
     def forward(self, timesteps: torch.Tensor, mask: Optional[torch.Tensor] = None):
         return self.embedding(
-            #
-            self.timesteps(timesteps)
-            if self.use_fourier
-            else self.timesteps(timesteps, mask)
+            # convert this to torch
+            self.timesteps(timesteps.to(torch.float16))
         )
 
 
